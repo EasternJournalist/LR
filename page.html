@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<style>
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    div.container {
+        overflow: hidden;
+        position: relative;
+        background-color: rgb(0, 0, 0);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        user-select: none;
+    }
+    
+    div.character {
+        position: absolute;
+        height: 100px;
+        width: 100px;
+        bottom: 0px;
+        left: 50%;
+        user-select: none;
+    }
+
+    img.gudetama-track {
+        height: 90px;
+        width: 90px;
+        display: block;
+    }
+    img.gudetama-float {
+        height: 240px;
+        width: 240px;
+        display: none;
+    }
+    img.gudetama-drag {
+        height: 140px;
+        width: 140px;
+        display: none;
+    }
+    img.gudetama-static {
+        height: 250px;
+        width: 250px;
+        display: none;
+    }
+</style>
+<head>
+    <meta charset="utf-8">
+    <title>Title</title>
+</head>
+<body>
+    <div id="container", class="container">
+        <div id="maintext", style="display: flex; align-items: center;">
+            <div style="display: inline-block; font-size: 40px; flex: none;">RuiRui </div> 
+            <div id="heart", style="display: inline-block; font-size: 40px; height: 60px; width: 80px; text-align: center; ">❤</div> 
+            <div style="display: inline-block; font-size: 40px;"> ruirui </div>
+        </div>
+        <div id="character", class="character", ondragstart="dragStart(event); return false;">
+            <img id="gudetama-static", class="gudetama-static", src="images/gudetama-static.png">
+            <img id="gudetama-track", class="gudetama-track", src="images/gudetama-track.png">
+            <img id="gudetama-float", class="gudetama-float", src="images/gudetama-float.png">
+            <img id="gudetama-drag", class="gudetama-drag", src="images/gudetama-drag.png">
+        <div>
+    </div>
+    <script type="text/javascript">
+        var characterStatus = "static";
+        var heartAnimationTriggered = false;
+        function windowResize(event) {
+            container = document.getElementById("container");
+            container.style.width = window.innerWidth + "px";
+            container.style.height = window.innerHeight + "px";
+            staticStart();
+        }
+
+        window.onload = () => {
+            windowResize(event);
+            
+            var id = setInterval(animate, 10);
+            
+            function animate() {
+                if (characterStatus === "floating") {
+                    elem = document.getElementById("character");
+                    elem.style.top = (elem.offsetTop + 2) + "px";
+                    if (elem.offsetTop > window.innerHeight - 150) {
+                        staticStart();
+                    }
+                }
+            }
+            staticStart();
+        };
+        window.onresize = windowResize;
+            
+        window.onmouseup = (e) => {
+            if (characterStatus === "dragging") {
+                floatStart()
+            }
+        }
+        window.onmousemove = (e) => {
+            elem = document.getElementById("character");
+            if (characterStatus === "dragging") {
+                elem.style.left = (e.clientX - 70) + "px";
+                elem.style.top = (e.clientY - 5) + "px";
+            }
+            else if (characterStatus === "tracking") {
+                dx = e.clientX - (elem.offsetLeft + elem.clientWidth /  2);
+                dy = e.clientY - (elem.offsetTop + elem.clientHeight /  2);
+                if (dx * dx + dy * dy > 350 * 350) {
+                    staticStart();
+                }
+            }
+            else if (characterStatus === "static") {
+                dx = e.clientX - elem.offsetLeft;
+                dy = e.clientY - elem.offsetTop;
+                if (dx * dx + dy * dy < 150 * 150) {
+                    trackStart();
+                }
+            }
+        };
+
+        var t_color = 0;
+        window.onmousewheel = (e) => {
+            if (e.deltaY > 0) {
+                t_color = Math.min(t_color + 0.02, 2);
+            }
+            if (e.deltaY < 0) {
+                t_color = Math.max(t_color - 0.02, 1);
+            }
+            if (t_color < 1.) {
+                document.getElementById("container").style.backgroundColor = `rgb(${t_color * 189}, ${t_color * 253}, ${t_color * 152})`
+            }
+            if (t_color > 1.) {
+                red = (t_color - 1) * 251 + (2 - t_color) * 189;
+                green = (t_color - 1) * 176 + (2 - t_color) * 253;
+                blue = (t_color - 1) * 176 + (2 - t_color) * 152;
+                document.getElementById("container").style.backgroundColor = `rgb(${red}, ${green}, ${blue})`
+            }
+            if (t_color > 1.9 && !heartAnimationTriggered) {
+                heartAnimationTriggered = true;
+                var t = 0;
+                var id;
+                id = setInterval(() => {
+                    elem = document.getElementById("heart");
+                    elem.style.width = (80 - 20 * (1 - (2 * t - 1) * (2 * t - 1))) + "px"
+                    t += 0.01
+                    if (t > 0.5) {
+                        elem.style.color = "rgb(255, 50, 50)";
+                        clearInterval(id);
+                    }
+                }, 10);
+            }
+        }
+        function dragStart(e) {
+            for (node of document.getElementById("character").children) {
+                node.style.display = node.id == "gudetama-drag" ? "block" : "none"; 
+            }
+            characterStatus = "dragging";
+        }
+        function floatStart() {
+            elem = document.getElementById("character");
+            for (node of elem.children) {
+                node.style.display = node.id == "gudetama-float" ? "block" : "none"; 
+            }
+            elem.style.left = (elem.offsetLeft - 60) + "px";
+            elem.style.top = (elem.offsetTop - 140) + "px";
+            characterStatus = "floating";
+        }
+        function staticStart() {
+            elem = document.getElementById("character");
+            for (node of elem.children) {
+                node.style.display = node.id == "gudetama-static" ? "block" : "none"; 
+            }
+            elem.style.top = (window.innerHeight - 110) + "px";
+            if (characterStatus === "tracking") {
+                elem.style.left = (elem.offsetLeft - 60) + "px";
+            }
+            characterStatus = "static";
+        }
+        function trackStart() {
+            elem = document.getElementById("character");
+            for (node of elem.children) {
+                node.style.display = node.id == "gudetama-track" ? "block" : "none"; 
+            }
+            elem.style.top = (window.innerHeight - 50) + "px";
+            elem.style.left = (elem.offsetLeft + 60) + "px";
+            characterStatus = "tracking";
+        }
+        
+    </script>
+</body>
+</html>
